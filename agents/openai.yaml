@@ -1,0 +1,4 @@
+interface:
+  display_name: "Keti 课题管理"
+  short_description: "以模块任务书驱动科研课题规划、执行、校验、报告与汇报"
+  default_prompt: "使用 $keti 初始化我的课题，并生成可验证的 DAG 任务书。"
