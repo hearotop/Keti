@@ -129,9 +129,9 @@ python scripts/invalidate_tasks.py \
 
 ## 可选 Skill 集成
 
-| Skill | 上游仓库 | 用途 |
-|---|---|---|
-| Archify | [tt-a1i/archify](https://github.com/tt-a1i/archify.git) | 架构图、流程图、时序图、数据流图和状态图 |
+| Skill      | 上游仓库                                                       | 用途                                      |
+| ---------- | -------------------------------------------------------------- | ----------------------------------------- |
+| Archify    | [tt-a1i/archify](https://github.com/tt-a1i/archify.git)         | 架构图、流程图、时序图、数据流图和状态图  |
 | PPT Master | [hugohe3/ppt-master](https://github.com/hugohe3/ppt-master.git) | 可编辑 PPTX、模板套用、真实素材编排与讲稿 |
 
 这两个 Skill 均为可选集成。Keti 只在当前 Agent 环境已提供对应 Skill 时调用；若未安装，应先说明来源、许可证、权限和风险，并获得用户授权，不会静默下载或执行第三方代码。
