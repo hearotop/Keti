@@ -11,9 +11,13 @@
 
 ## Archify
 
+上游仓库：<https://github.com/tt-a1i/archify.git>
+
 系统架构、工作流、时序、数据流或状态机图优先调用 `$archify`。输入清晰的节点、关系、边界、关键状态和输出位置。保留生成的 HTML/SVG 源产物，在 `assets/manifest.json` 登记为 `generated_diagram`。若不可用，保留 Mermaid/PlantUML 文本作为可编辑降级产物，不声称已经生成图片。
 
 ## PPT Master
+
+上游仓库：<https://github.com/hugohe3/ppt-master.git>
 
 已有 `.pptx` 模板或用户明确要求生成演示文稿时调用 `$ppt-master`。提供：模板路径、受众与时长、逐页目标、已验证资产路径、引用、speaker notes 要求。不得把外部参考图伪装成本地实验图。不可用时输出 `presentations/outline.md` 和 `presentations/speaker_notes.md`。
 
