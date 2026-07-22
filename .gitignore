@@ -143,3 +143,9 @@ vite.config.ts.timestamp-*
 .vite/
 #files
 .pdf
+
+# Keti optional resource packs and generated Python caches
+.keti-resource-cache/
+__pycache__/
+*.py[cod]
+测试

@@ -15,6 +15,7 @@ Keti 是一个面向毕业设计、科研项目、实验课题、论文和组会
 - 联动 [Archify](https://github.com/tt-a1i/archify.git) 生成架构、流程、时序和状态图。
 - 联动 [PPT Master](https://github.com/hugohe3/ppt-master.git) 使用真实模板、实验图表和讲稿生成汇报材料。
 - 只读发现本地 Skill；第三方 Skill 必须经过来源、许可证和权限审查后再安装。
+- 按“用户资源 → 课题资源 → 本地缓存 → 可选远程包”发现 PPT 与图片，核心仓库不捆绑大文件。
 
 ## 两种任务流程
 
@@ -105,6 +106,7 @@ research-project/
 | `scripts/verify_deliverables.py`   | 执行任务书中的文件、JSON 和命令验收规则 |
 | `scripts/invalidate_tasks.py`      | 计算并标记变更任务的传递下游为`stale` |
 | `scripts/discover_local_skills.py` | 在显式指定的目录中只读发现本地 Skill    |
+| `scripts/discover_resources.py` | 按优先级只读发现显式范围内的 PPT、图片和字体资源 |
 
 示例：验证一个任务的交付物：
 
@@ -135,6 +137,21 @@ python scripts/invalidate_tasks.py \
 | PPT Master | [hugohe3/ppt-master](https://github.com/hugohe3/ppt-master.git) | 可编辑 PPTX、模板套用、真实素材编排与讲稿 |
 
 这两个 Skill 均为可选集成。Keti 只在当前 Agent 环境已提供对应 Skill 时调用；若未安装，应先说明来源、许可证、权限和风险，并获得用户授权，不会静默下载或执行第三方代码。
+
+## 可选资源包
+
+大型 PPT、字体和成套图片不进入核心 Git 仓库。Keti 只提交 [资源目录](assets/resource-catalog.json)，实际文件存放在 `.keti-resource-cache/packs/`、课题目录或用户明确指定的位置。
+
+资源选择优先级为：用户提示词指定资源、当前课题资源、本地缓存、远程可选资源包。发现候选：
+
+```bash
+python scripts/discover_resources.py \
+  --project-root /path/to/research-project \
+  --cache-root .keti-resource-cache/packs \
+  --user-path /optional/user/assets
+```
+
+命令仅执行只读扫描。远程资源需要在用户确认来源、许可证、大小和缓存位置后下载；字体不会被自动安装。
 
 ## 真实性与安全规则
 

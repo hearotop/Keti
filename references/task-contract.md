@@ -10,6 +10,9 @@ status: "pending"
 depends_on: ["03-implementation"]
 updated_at: "2026-07-21T20:00:00+08:00"
 retry_count: 0
+user_approval:
+  execution: "pending"
+  deliverable_review: "pending"
 ---
 
 # 实验设计与数据分析
@@ -26,6 +29,10 @@ retry_count: 0
 ## 交付物
 - `experiments/metrics.json`
 - `assets/local_experiments/latency.png`
+
+## 用户确认
+- 执行确认：等待/已确认；时间与用户原话
+- 交付物验收：等待/通过/要求修改；时间与意见
 
 ## 验收规则
 ```yaml
@@ -54,7 +61,9 @@ checks:
 
 ## 状态机
 
-`pending -> ready -> in_progress -> completed`。验证失败进入 `failed`，可修复后回到 `in_progress`；缺少用户输入、权限或外部条件时进入 `blocked`；上游变化后进入 `stale`。不得用勾选框同时表达多个状态。
+`pending -> ready -> in_progress -> awaiting_review -> completed`。`ready` 必须等待用户执行确认；自动验证通过后进入 `awaiting_review`；只有用户验收通过才进入 `completed`。验证失败进入 `failed`，经用户确认修复后回到 `in_progress`；缺少用户输入、权限或外部条件时进入 `blocked`；上游变化后进入 `stale`。不得用勾选框同时表达多个状态。
+
+每个任务的“交付物”必须列出具体相对路径。申请书、项目书、报告和论文默认使用 Markdown 主文件，例如 `reports/project_application.md`，并可附带 DOCX/PDF 派生版本；PPT 不能替代正文主文件。
 
 ## 验收检查类型
 

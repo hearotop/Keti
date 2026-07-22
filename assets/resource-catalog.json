@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "packs": [
+    {
+      "id": "legacy-starter",
+      "name": "Keti 本地初始化资源",
+      "version": "1.0.0",
+      "source": null,
+      "download_url": null,
+      "license": "unknown",
+      "status": "local-only",
+      "default_cache_path": ".keti-resource-cache/packs/legacy-starter",
+      "description": "原始 PPT、字体与 SCI 图片样例；仅保留在本地缓存，明确许可证与发布地址后再发布为远程资源包。"
+    }
+  ]
+}

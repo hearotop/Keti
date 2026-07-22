@@ -5,6 +5,9 @@ status: "pending"
 depends_on: []
 updated_at: "{{timestamp}}"
 retry_count: 0
+user_approval:
+  execution: "pending"
+  deliverable_review: "pending"
 ---
 
 # {{task_title}}
@@ -16,6 +19,13 @@ retry_count: 0
 ## 执行步骤
 
 ## 交付物
+
+列出每个重要文件的明确相对路径。
+
+## 用户确认
+
+- 执行确认：等待
+- 交付物验收：等待
 
 ## 验收规则
 
