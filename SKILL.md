@@ -100,6 +100,72 @@ description: 以任务书驱动方式管理端到端科研课题：初始化课�
 - 不将“继续”“开始下一步”等模糊指令解释为多个节点的批量授权；展示当前节点执行卡后，只执行该节点。
 - 不因已经生成 PPT 而判定课题成果完整；逐项核对 `project.yaml.deliverables` 和 `master_task.md`，缺少任何选定成果都必须保持项目未完成。
 
+## PPT 制作专项规范
+
+基于 svg-to-pptx roundtrip 流程的实战经验，制作 PPT 时必须遵守以下规则，避免反复返工。
+
+### 模板继承与 roundtrip
+
+- 从现有 PPT 提取模板时，**layout 继承对象必须 byte-for-byte 保留**，不得修改其属性（如 `layout-shape-52` 半透明背景图）。需要视觉空白时，用不透明白/蓝 rect 覆盖实现，不得编辑继承对象。
+- **满画布纯色 rect 会被识别为 slide background 并丢弃**。背景 rect 宽高必须小于画布尺寸（如 1279×719 而非 1280×720）。
+- **所有 `<rect>` 必须有 id**。生成后用后处理脚本给无 id 的 rect 加 `id="rN"`，否则 roundtrip 报错。
+- **文本内容必须 XML 转义**：`<` `>` `&` 在 `<text>` 内容里需用 `xml.sax.saxutils.escape` 转义。
+- **`<a:spAutoFit />` 会导致 LibreOffice 自动换行**，把长文本拆成多行。后处理时把所有 `<a:spAutoFit />` 替换为 `<a:noAutofit />`。
+- **文本必须用 frame 包裹**：纯 `<text>` 无 frame 会导致 PPTX 文本框宽度不足、文字被截断。用以下结构：
+  ```xml
+  <g data-pptx-object="shape" data-pptx-prst="rect" data-pptx-frame="x y w h">
+    <path d="..." fill="none" stroke="none" data-pptx-part="geometry" />
+    <text ...>内容</text>
+  </g>
+  ```
+
+### 字体与排版
+
+- **中英文字体分离**：英文/数字用 Times New Roman，中文用思源黑体。通过 `font-family="'Times New Roman', '思源黑体 CN', sans-serif"` 的回退机制实现——Times New Roman 不含中文字符，中文自动回退到思源黑体。
+- **字号要充实**：标题 ≥30px，卡片标题 ≥18px，正文 ≥15-16px。字号过小会让页面空旷。
+- **行间距**：1.4-1.8 之间，根据内容密度调整。
+- **卡片内文字必须指定 width**，长描述要主动拆行，避免溢出或与标题重叠。
+- **字体颜色随背景调整**：白色背景用深色字（如 #0055AA），蓝色背景用白字。
+
+### 图片处理
+
+- **论文截图要精确裁剪**：只保留图表区域，去掉表格和正文干扰。裁剪宽度取论文栏宽（英文侧约 635px），保证清晰。
+- **小图需高清化**：校徽等小图用 LANCZOS 3 倍放大 + 锐化 + 对比度增强，保存为高清版本。
+- **图片放大后不得超出页面范围**（13.33×7.50 inches / 1280×720 px），放大前先算好目标尺寸。
+- **图片需标注出处**：论文图下方加 `Source: Fig.X, <论文标题>`。
+
+### 学术内容呈现
+
+- **数学公式必须原版呈现**：用 LaTeX 渲染成 PNG 图片插入，不得用纯文本或 Unicode 近似代替。公式图片需与论文原版一致。
+- **缩写首次出现必须标注全称+中文含义**，如 `DoD (Depth of Discharge, 放电深度)`、`CDF (Cumulative Distribution Function, 累积分布函数)`。
+- **论文数据、参数、档位等细节必须查原文确认**，不得凭记忆或推断填写。例如频率档位、V 参数范围等，要从论文 PDF 中提取原文。
+- **论文出处可点击跳转**：在讲稿或文档中用 `[Section X, 第 N 页](file:///论文路径#page=N)` 格式，点击可打开 PDF 并跳转到对应页码。文件名中的特殊字符（空格、括号）需 URL 编码。
+- **区分"论文已有"和"本研究扩展"**：问答准备中，论文涉及的内容标注章节页码，论文未涉及的明确标注"本研究扩展"，不得假装论文有。
+
+### 校徽与封面
+
+- 校徽放在蓝色背景上可能看不清。解决：上半部分改白色、下半部分蓝色，校徽置于白色区域。
+- 首页/尾页的装饰元素（机构栏、题目标签等）可删除为内容腾空间，但布局骨架与模板一致。
+- 校徽位置：首页/尾页上方居中，内容页可放蓝色顶栏右上角（若背景冲突则去除）。
+
+### 可复用模板提取
+
+- 课题结束后必须提取**可复用 PPT 模板**（3 页：封面 / 内容页示例 / 封底），保存到 `templates/` 或 `outputs/`。
+- 模板要预置好配色、字体、校徽、布局骨架，下次只需修改文字内容。
+- 同时提取**可复用生成脚本**（参数化的页面内容函数），便于批量生成多页 PPT。
+
+### 构建与验证流程
+
+1. 生成 SVG → XML 转义 + rect 加 id → ppt-master 导出 → spAutoFit→noAutofit → LibreOffice 转 PDF → pdftoppm 转 PNG
+2. 每次修改后必须运行完整构建，检查：无超界、无重叠、字体正确、图片清晰
+3. 构建失败时先查 roundtrip 报错（roster 不一致、rect 无 id、XML 转义错误等）
+
+### 清理规范
+
+- 课题完成后清理旧版本文件（v1~v6 的 pptx/pdf/预览图）、旧脚本、临时素材目录。
+- **删除前必须 grep 确认引用关系**：检查被引用的图片、SVG、脚本，避免误删仍在使用的文件。
+- 保留：最新版本 PPT、可复用模板、汇报文案、生成脚本及被引用素材、源文件（模板 PPT、论文 PDF、校徽）。
+
 ## 推荐任务 DAG
 
 需要代码时可选择：`literature -> architecture -> implementation -> experiments -> application/report -> presentation`。不需要代码时使用裁剪链：`literature -> methodology/data collection -> analysis -> application/report -> presentation`。其中 `application/report` 必须展开为用户实际选择的申请书、项目书、开题/中期/结题报告或论文节点。允许文献与资料盘点并行；申请书和报告依赖已验证证据；演示依赖已验收的正文成果和已验证资产。所有箭头都表示“完成汇报并经用户验收后才可解锁”，不是自动连续执行。
