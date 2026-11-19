@@ -9,11 +9,13 @@ Keti 是一个面向毕业设计、科研项目、实验课题、论文和组会
 - 初始化课题名称、方向、专业、导师偏好、资料位置、交付物和约束。
 - 明确询问是否需要生成或修改代码，并据此裁剪工作流。
 - 将课题拆分为带依赖、输入、交付物和机器验收规则的模块任务书。
+- 用节点记忆图保留当前节点、导航历史和检查点，支持任意节点开始、跳跃与回溯。
 - 建立文献、外部参考图、架构图和本地实验图的溯源清单。
 - 验证任务交付物，失败时记录实际错误并限制重复尝试。
 - 根据导师反馈计算受影响的下游任务，只重新执行必要部分。
 - 联动 [Archify](https://github.com/tt-a1i/archify.git) 生成架构、流程、时序和状态图。
 - 联动 [PPT Master](https://github.com/hugohe3/ppt-master.git) 使用真实模板、实验图表和讲稿生成汇报材料。
+- 附带 Paper Composer Skill：按机构投稿模板和用户内容大纲，把已有实验证据组织成可校验的论文成稿。
 - 只读发现本地 Skill；第三方 Skill 必须经过来源、许可证和权限审查后再安装。
 - 按“用户资源 → 课题资源 → 本地缓存 → 可选远程包”发现 PPT 与图片，核心仓库不捆绑大文件。
 
@@ -33,6 +35,72 @@ Keti 是一个面向毕业设计、科研项目、实验课题、论文和组会
 
 是否生成代码由用户明确决定，Keti 不会根据专业方向自行推断。
 
+任务 DAG 只表达依赖，不限制起点。已有任务即使尚未完成，用户也可以指定任意节点开始；依赖未完成时会提示缺失产物和返工风险。
+
+## 节点记忆图
+
+Keti 在每个课题的 `state/` 下维护节点记忆图：
+
+- `progress_graph.json`：当前节点、导航栈、依赖缺口、访问次数和检查点索引。
+- `progress_history.jsonl`：追加式记录开始、跳转、回溯、检查点和恢复事件。
+- `checkpoints/`：图状态快照。
+
+常用命令：
+
+```bash
+# 任务书新增或状态变化后同步
+python scripts/progress_graph.py --project-root /path/to/project sync
+
+# 查看当前节点、依赖缺口和整张图
+python scripts/progress_graph.py --project-root /path/to/project status
+
+# 从任意节点开始，或跳转到其他节点
+python scripts/progress_graph.py --project-root /path/to/project start --node 04-analysis
+python scripts/progress_graph.py --project-root /path/to/project jump --node 06-presentation --reason "先准备汇报骨架"
+
+# 沿导航历史回溯 / 前进
+python scripts/progress_graph.py --project-root /path/to/project back --steps 1
+python scripts/progress_graph.py --project-root /path/to/project forward --steps 1
+
+# 保存或恢复图记忆
+python scripts/progress_graph.py --project-root /path/to/project checkpoint --note "实验前基线"
+python scripts/progress_graph.py --project-root /path/to/project restore --checkpoint <id>
+
+# 回退任务状态，可选级联下游
+python scripts/progress_graph.py --project-root /path/to/project reopen --node 03-implementation \
+  --reason "接口调整" --cascade
+```
+
+语义：`start`/`jump` 只切换当前节点，不改变任务状态，执行前仍须确认；`back`/`forward` 只移动导航光标；`checkpoint`/`restore` 只保存和恢复图记忆；只有 `reopen` 会改任务状态。任务文件 frontmatter 始终是状态的唯一事实来源，任何跳转都不等于验收通过或依赖已满足。
+
+## 投稿论文成稿（Paper Composer）
+
+仓库同时包含独立 Skill [skills/paper-composer](skills/paper-composer/SKILL.md)，用于“实验已积累大量数据，需要按目标单位模板写成论文”的场景。它把输入分为两类权威：
+
+- **机构模板**：LaTeX `.tex` / `.cls`、Word `.docx` / `.dotx`，或可读的投稿指南，决定页面、字体、章节层级、引用格式和必需声明。
+- **用户内容大纲**：决定中心论点、章节意图、关键结果和取舍。
+
+核心流程为：模板剖析 → 证据盘点 → 大纲映射 → 骨架确认 → 逐节成稿 → 组装合规 → 验收。所有数字、图表和引用必须回到证据清单；缺证据时标记缺口，不编造内容。
+
+```bash
+python skills/paper-composer/scripts/init_manuscript.py \
+  --root /path/to/manuscript \
+  --title "论文题目" \
+  --format latex \
+  --template /path/to/institution-template \
+  --outline /path/to/outline.md \
+  --dry-run
+
+python skills/paper-composer/scripts/inspect_template.py \
+  --root /path/to/manuscript \
+  --path /path/to/institution-template
+
+python skills/paper-composer/scripts/verify_manuscript.py \
+  --root /path/to/manuscript --strict
+```
+
+若所用平台只发现仓库根目录的 `SKILL.md`，可将 `skills/paper-composer/` 单独复制或链接到该平台的 Skill 目录。
+
 ## 安装
 
 将仓库克隆到 Codex Skills 目录：
@@ -50,6 +118,12 @@ python -m pip install -r ~/.codex/skills/keti/requirements.txt
 
 ```text
 使用 $keti 初始化我的课题。课题名称是《……》，方向是……，专业是……，导师偏好……。这个课题不需要生成代码，需要完成文献综述、数据分析、项目报告和汇报 PPT。
+```
+
+已有课题时可以直接指定起点：
+
+```text
+使用 $keti 查看节点记忆图，并从“05-report”开始。先列出未完成的依赖和缺失产物，再决定是否继续。
 ```
 
 如果没有说明是否需要代码，Keti 会先询问：
@@ -91,6 +165,10 @@ research-project/
 ├── reports/
 ├── presentations/
 ├── templates/
+├── state/                       # 节点记忆图
+│   ├── progress_graph.json      # 当前节点、导航栈、依赖缺口、检查点索引
+│   ├── progress_history.jsonl   # 跳转与回溯事件
+│   └── checkpoints/             # 图状态快照
 ├── src/                         # 仅代码模式创建
 └── tests/                       # 仅代码模式创建
 ```
@@ -105,6 +183,7 @@ research-project/
 | `scripts/probe_environment.py`     | 只读检查当前模式所需的环境能力          |
 | `scripts/verify_deliverables.py`   | 执行任务书中的文件、JSON 和命令验收规则 |
 | `scripts/invalidate_tasks.py`      | 计算并标记变更任务的传递下游为`stale` |
+| `scripts/progress_graph.py`         | 同步节点记忆图，支持任意起点、跳跃、回溯和检查点 |
 | `scripts/discover_local_skills.py` | 在显式指定的目录中只读发现本地 Skill    |
 | `scripts/discover_resources.py` | 按优先级只读发现显式范围内的 PPT、图片和字体资源 |
 
@@ -177,6 +256,13 @@ Keti/
 │   ├── evidence-contract.md
 │   └── integrations.md
 ├── scripts/
+├── skills/
+│   └── paper-composer/          # 投稿论文成稿 Skill
+│       ├── SKILL.md
+│       ├── agents/
+│       ├── assets/
+│       ├── references/
+│       └── scripts/
 ├── requirements.txt
 └── LICENSE
 ```

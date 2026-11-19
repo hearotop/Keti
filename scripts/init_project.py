@@ -14,6 +14,7 @@ BASE_DIRECTORIES = (
     "assets/external_references",
     "assets/generated_diagrams", "assets/local_experiments",
     "reports", "presentations", "templates",
+    "state", "state/checkpoints",
 )
 
 CODE_DIRECTORIES = ("src", "tests", "experiments/scripts")
@@ -41,6 +42,10 @@ def files(title: str, code_generation: bool) -> dict[str, str]:
             f'# 课题总任务书：{title}\n\n## 目标与成功标准\n\n'
             '## 范围与约束\n\n## 资料与证据现状\n\n## 任务 DAG\n\n'
             '| ID | 任务 | 依赖 | 状态 | 交付物 |\n|---|---|---|---|---|\n\n'
+            '## 节点记忆图\n\n'
+            '进度、当前节点、导航历史与检查点由 `state/progress_graph.json` 维护，事件写入 '
+            '`state/progress_history.jsonl`。使用 `scripts/progress_graph.py` 同步、查看、跳跃或回溯。'
+            '用户可选择任意节点作为起点；依赖未完成时先提示风险，但仍需逐节点确认后才执行。\n\n'
             '## 里程碑与风险\n\n## 决策与变更记录\n'
         ),
         "sources/source_registry.json": json.dumps(

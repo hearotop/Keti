@@ -21,6 +21,14 @@
 
 已有 `.pptx` 模板或用户明确要求生成演示文稿时调用 `$ppt-master`。提供：模板路径、受众与时长、逐页目标、已验证资产路径、引用、speaker notes 要求。不得把外部参考图伪装成本地实验图。不可用时输出 `presentations/outline.md` 和 `presentations/speaker_notes.md`。
 
+## Paper Composer
+
+仓库内 Skill：[skills/paper-composer/SKILL.md](../skills/paper-composer/SKILL.md)
+
+当用户已有机构投稿模板和内容大纲，需要把实验数据写成论文时调用 `$paper-composer`。传入：模板文件或目录、用户大纲、证据库、目标单位/期刊、语言和投稿元数据。该 Skill 会先剖析模板、盘点证据、映射大纲，再逐节成稿并做合规校验。
+
+若当前平台未发现该 Skill，可直接按其 `SKILL.md` 和 `references/` 执行；不得跳过模板剖析和证据映射直接生成全文，也不得修改机构模板原件。
+
 ## 学术检索
 
 优先开放、权威、可引用来源，如 Crossref、OpenAlex、Semantic Scholar、arXiv、出版社页面与专业组织。Google Scholar 可用于发现线索，但应尽量回到论文或出版社原始页面核验。不得绕过百度文库、IEEE、ACM 等站点的登录、验证码或付费限制。

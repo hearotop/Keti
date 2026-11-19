@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Composer 投稿成稿"
+  short_description: "按机构模板与用户大纲，把已有实验证据组织成合规投稿论文"
+  default_prompt: "使用 $paper-composer，依据我的机构模板和内容大纲，把已有实验数据组织成投稿论文。"

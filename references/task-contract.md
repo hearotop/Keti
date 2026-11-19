@@ -63,6 +63,24 @@ checks:
 
 `pending -> ready -> in_progress -> awaiting_review -> completed`。`ready` 必须等待用户执行确认；自动验证通过后进入 `awaiting_review`；只有用户验收通过才进入 `completed`。验证失败进入 `failed`，经用户确认修复后回到 `in_progress`；缺少用户输入、权限或外部条件时进入 `blocked`；上游变化后进入 `stale`。不得用勾选框同时表达多个状态。
 
+任务文件 frontmatter 是任务状态的唯一事实来源。`state/progress_graph.json` 只保存当前节点、导航历史、访问次数和检查点，不替代任务状态。允许用户从任意节点开始：依赖未完成不自动拒绝，但必须在执行卡中列出 `unmet_dependencies`、缺失产物和返工风险。
+
+```text
+state/
+├── progress_graph.json      # 节点、依赖、当前节点、导航栈、检查点索引
+├── progress_history.jsonl   # 追加式导航与回溯事件
+└── checkpoints/             # 图状态快照
+```
+
+导航语义：
+
+- `start` / `jump` 切换当前节点，不改变任务状态。
+- `back` / `forward` 只移动导航光标，不回退状态、不删除文件。
+- `checkpoint` 保存图状态；`restore` 只恢复图记忆。
+- `reopen` 把任务改为 `ready`；`--cascade` 将传递下游改为 `stale`。
+
+状态跳转必须由用户明确选择并记录原因；不得把“跳转”解释为“验收通过”或“依赖已满足”。
+
 每个任务的“交付物”必须列出具体相对路径。申请书、项目书、报告和论文默认使用 Markdown 主文件，例如 `reports/project_application.md`，并可附带 DOCX/PDF 派生版本；PPT 不能替代正文主文件。
 
 ## 验收检查类型
